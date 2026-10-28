@@ -1,0 +1,36 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Tabela de Contatos e Orçamentos capturados pela Landing Page
+model ContactLead {
+  id          String   @id @default(cuid())
+  name        String
+  phone       String
+  email       String?
+  serviceType String
+  message     String?
+  createdAt   DateTime @default(now())
+}
+
+// Estrutura pronta para ativação futura: Catálogo / Vitrine de Produtos e Peças
+model Product {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  category    String   // Ex: "Notebooks", "CFTV", "Componentes", "Redes"
+  description String
+  price       Decimal? @db.Decimal(10, 2)
+  inStock     Boolean  @default(true)
+  imageUrl    String?
+  badge       String?  // Ex: "Pronta Entrega", "Revisado", "Destaque"
+  specs       Json?    // Especificações técnicas flexíveis
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
