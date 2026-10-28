@@ -16,15 +16,15 @@
     "badgeText": "Especialistas em Notebooks, PCs Gamers & Tecnologia em Recife",
     "titlePrefix": "Diagnóstico Ágil e Alta Performance para",
     "titleHighlight": "Notebooks e PCs Gamers",
-    "description": "Soluções avançadas em hardware e software, upgrades de SSD NVMe, Memória RAM, Placas de Vídeo e Refrigeração com resolução rápida em Recife e Região Metropolitana — além de atendimento especializado para Smartphones, Redes e Segurança Eletrônica.",
+    "description": "Soluções avançadas em hardware e software, diagnóstico em Placas de Vídeo (GPU), upgrades de SSD NVMe, Memória RAM e Soluções para Servidores com resolução rápida em Recife e Região Metropolitana — além de atendimento especializado para Smartphones e Segurança Eletrônica.",
     "bullets": [
       "Diagnóstico de Notebooks e PCs Gamers",
-      "Resolução Ágil em até 1 Hora*",
+      "Diagnóstico Especializado em Placas de Vídeo (GPU)",
       "Upgrades de SSD NVMe, RAM e Water Cooler",
-      "Redes Gigabit, CFTV HD e Alarmes (24/7)"
+      "Soluções para Servidores, CFTV HD e Alarmes"
     ],
     "ctaPrimaryText": "Solicitar Diagnóstico no WhatsApp",
-    "ctaSecondaryText": "Ver Upgrades & Equipamentos",
+    "ctaSecondaryText": "Conhecer Nossas Soluções",
     "disclaimer": "*Tempo estimado para procedimentos expressos de diagnóstico, upgrades e substituição de componentes em estoque."
   },
   "services": [
@@ -68,13 +68,13 @@
     },
     {
       "id": "redes",
-      "title": "Redes Gigabit e Conectividade Wi-Fi de Baixa Latência",
-      "badge": "Zero Lag & Estabilidade",
-      "description": "Infraestrutura de rede cabeada Cat6 e distribuição Wi-Fi 6 Mesh para eliminar quedas de sinal em jogos online, home office e escritórios.",
+      "title": "Diagnóstico e Soluções para Servidores e Infraestrutura",
+      "badge": "Ambientes Corporativos",
+      "description": "Atendimento especializado para servidores físicos e virtuais, storage, configuração de rede estruturada, rotinas de backup e continuidade de negócios para empresas.",
       "features": [
-        "Cabeamento estruturado Gigabit para PCs Gamers e empresas",
-        "Projetos Wi-Fi 6 / Mesh cobrindo 100% do ambiente sem perda",
-        "Configuração avançada de roteadores e organização de Racks"
+        "Diagnóstico avançado de hardware para servidores Dell, HP e Lenovo",
+        "Configuração de RAID, upgrade de discos SAS/SSD Enterprise e memória ECC",
+        "Organização de Racks, cabeamento estruturado e segurança de dados"
       ],
       "iconName": "Wifi"
     },

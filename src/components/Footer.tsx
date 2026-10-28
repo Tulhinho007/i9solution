@@ -87,16 +87,16 @@ export default function Footer({ settings = DEFAULT_SITE_SETTINGS }: FooterProps
             </ul>
           </div>
 
-          {/* Coluna 3 - Especialidades (Notebooks e PCs Gamers primeiro, CFTV por último) */}
+          {/* Coluna 3 - Especialidades (Notebooks, PCs Gamers e Placas de Vídeo primeiro, CFTV por último) */}
           <div>
             <h3 className="text-sm font-bold uppercase tracking-wider text-white mb-4">
               Especialidades
             </h3>
             <ul className="space-y-2.5 text-sm">
               <li className="text-slate-200 font-medium">Diagnóstico e Upgrades p/ Notebooks</li>
-              <li className="text-slate-200 font-medium">Performance e Montagem de PCs Gamers</li>
+              <li className="text-slate-200 font-medium">Performance de PCs Gamers e Placas de Vídeo</li>
               <li>Diagnóstico Ágil para Smartphones</li>
-              <li>Redes Gigabit e Wi-Fi 6 Mesh</li>
+              <li>Soluções para Servidores Corporativos</li>
               <li>Monitoramento CFTV e Segurança</li>
             </ul>
           </div>

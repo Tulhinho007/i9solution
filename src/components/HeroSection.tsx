@@ -134,9 +134,24 @@ export default function HeroSection({
                   </div>
                 </div>
 
-                {/* 2º Smartphones */}
+                {/* 2º Diagnóstico em Placas de Vídeo (GPU) */}
                 <div className="flex items-start gap-4 p-4 rounded-xl bg-slate-800/50 border border-slate-700/60 hover:border-cyan-500/50 transition-colors">
                   <div className="p-3 rounded-lg bg-emerald-500/10 text-emerald-400">
+                    <Cpu className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-white text-sm sm:text-base">
+                      Diagnóstico em Placas de Vídeo (GPU)
+                    </h3>
+                    <p className="text-xs sm:text-sm text-slate-300 mt-1">
+                      Análise eletrônica avançada, troca de thermal pads, pasta térmica de alta condutividade e testes de estabilidade.
+                    </p>
+                  </div>
+                </div>
+
+                {/* 3º Atendimento Especializado para Celulares */}
+                <div className="flex items-start gap-4 p-4 rounded-xl bg-slate-800/50 border border-slate-700/60 hover:border-cyan-500/50 transition-colors">
+                  <div className="p-3 rounded-lg bg-cyan-500/10 text-cyan-400">
                     <Smartphone className="w-6 h-6" />
                   </div>
                   <div>
@@ -145,21 +160,6 @@ export default function HeroSection({
                     </h3>
                     <p className="text-xs sm:text-sm text-slate-300 mt-1">
                       Diagnóstico ágil e renovação de telas, baterias e conectores com garantia.
-                    </p>
-                  </div>
-                </div>
-
-                {/* 3º Redes Gigabit */}
-                <div className="flex items-start gap-4 p-4 rounded-xl bg-slate-800/50 border border-slate-700/60 hover:border-cyan-500/50 transition-colors">
-                  <div className="p-3 rounded-lg bg-cyan-500/10 text-cyan-400">
-                    <Wifi className="w-6 h-6" />
-                  </div>
-                  <div>
-                    <h3 className="font-bold text-white text-sm sm:text-base">
-                      Redes Gigabit &amp; Wi-Fi 6 de Baixa Latência
-                    </h3>
-                    <p className="text-xs sm:text-sm text-slate-300 mt-1">
-                      Conexão ultraestável sem perda de pacotes para setups gamers, home office e empresas.
                     </p>
                   </div>
                 </div>

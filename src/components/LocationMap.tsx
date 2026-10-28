@@ -200,9 +200,9 @@ export default function LocationMap() {
                   >
                     <option value="Diagnóstico e Upgrade para Notebooks">Diagnóstico e Upgrade para Notebooks</option>
                     <option value="Diagnóstico e Performance para PC Gamer">Diagnóstico e Performance para PC Gamer</option>
+                    <option value="Diagnóstico em Placas de Vídeo (GPU)">Diagnóstico em Placas de Vídeo (GPU)</option>
                     <option value="Atendimento Especializado para Celulares">Atendimento Especializado para Celulares</option>
-                    <option value="Compra de Equipamentos / Peças">Compra de Equipamentos / Peças</option>
-                    <option value="Redes Gigabit e Wi-Fi">Redes Gigabit e Wi-Fi</option>
+                    <option value="Diagnóstico e Soluções para Servidores">Diagnóstico e Soluções para Servidores</option>
                     <option value="CFTV e Segurança Eletrônica">CFTV e Segurança Eletrônica</option>
                   </select>
                 </div>
