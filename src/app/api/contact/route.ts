@@ -1,12 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { addTicket, getCMSData } from "@/lib/cms";
+import { checkRateLimit, getClientIp } from "@/lib/auth";
 
-// Sanitização básica contra XSS/HTML injection em strings de entrada
+// Sanitização rigorosa contra XSS, tags HTML e payloads maliciosos
 function sanitizeInput(value: string): string {
   return value
     .replace(/[<>]/g, "")
     .replace(/javascript:/gi, "")
+    .replace(/on\w+=/gi, "")
     .trim();
 }
 
@@ -38,10 +40,25 @@ const contactSchema = z.object({
     .optional()
     .or(z.literal(""))
     .transform((v) => (v ? sanitizeInput(v) : "")),
+  // Campo Honeypot anti-bot (deve vir vazio)
+  website: z.string().max(0).optional().or(z.literal("")),
 });
 
 export async function POST(request: NextRequest) {
   try {
+    const ip = getClientIp(request);
+    // Limite de 6 envios a cada 10 minutos por IP para evitar spam / flood de chamados
+    const rate = checkRateLimit(`contact-submit:${ip}`, 6, 1000 * 60 * 10);
+    if (!rate.allowed) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Muitas solicitações enviadas em sequência. Aguarde alguns minutos ou chame direto no WhatsApp.",
+        },
+        { status: 429 }
+      );
+    }
+
     const body = await request.json();
     const parsed = contactSchema.safeParse(body);
 
@@ -50,7 +67,6 @@ export async function POST(request: NextRequest) {
         {
           success: false,
           error: "Verifique os dados informados no formulário.",
-          details: parsed.error.flatten().fieldErrors,
         },
         { status: 400 }
       );
@@ -58,7 +74,7 @@ export async function POST(request: NextRequest) {
 
     const { name, phone, email, serviceType, message } = parsed.data;
 
-    // 1. Grava o chamado (Ticket) automaticamente para aparecer no Painel Administrativo (/admin)
+    // 1. Grava o chamado SOMENTE no servidor (nunca fica no localStorage do navegador do visitante)
     const ticket = await addTicket({
       name,
       phone,
@@ -67,7 +83,6 @@ export async function POST(request: NextRequest) {
       message,
     });
 
-    // 2. Busca o número de WhatsApp configurado no painel para montar o atalho opcional
     const cms = await getCMSData();
 
     const whatsappMessage = [
@@ -87,14 +102,20 @@ export async function POST(request: NextRequest) {
       whatsappMessage
     )}`;
 
+    // Retorna apenas o número do protocolo público e o link de redirecionamento
     return NextResponse.json(
       {
         success: true,
         protocol: ticket.protocol,
-        message: `Chamado ${ticket.protocol} registrado com sucesso no nosso sistema! Nossa equipe entrará em contato pelo WhatsApp informado.`,
+        message: `Chamado ${ticket.protocol} registrado com segurança! Nossa equipe entrará em contato pelo WhatsApp informado.`,
         whatsappRedirectUrl,
       },
-      { status: 200 }
+      {
+        status: 200,
+        headers: {
+          "Cache-Control": "no-store, no-cache, must-revalidate",
+        },
+      }
     );
   } catch {
     return NextResponse.json(

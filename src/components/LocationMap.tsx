@@ -19,6 +19,7 @@ export default function LocationMap() {
   const [email, setEmail] = useState("");
   const [serviceType, setServiceType] = useState("Diagnóstico e Upgrade para Notebooks");
   const [message, setMessage] = useState("");
+  const [website, setWebsite] = useState(""); // Honeypot invisível contra bots
   const [submitting, setSubmitting] = useState(false);
   const [feedback, setFeedback] = useState<{
     type: "success" | "error";
@@ -35,7 +36,7 @@ export default function LocationMap() {
       const response = await fetch("/api/contact", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, phone, email, serviceType, message }),
+        body: JSON.stringify({ name, phone, email, serviceType, message, website }),
       });
 
       const data = await response.json();
@@ -142,7 +143,18 @@ export default function LocationMap() {
                 Preencha os dados abaixo para receber atendimento personalizado da nossa equipe.
               </p>
 
-              <form onSubmit={handleSubmit} className="space-y-4">
+              <form onSubmit={handleSubmit} className="space-y-4" autoComplete="off">
+                {/* Campo Honeypot anti-bot invisível para usuários reais */}
+                <div className="hidden" aria-hidden="true">
+                  <input
+                    type="text"
+                    name="website"
+                    tabIndex={-1}
+                    autoComplete="off"
+                    value={website}
+                    onChange={(e) => setWebsite(e.target.value)}
+                  />
+                </div>
                 <div>
                   <label htmlFor="name" className="block text-xs font-bold uppercase text-slate-700 mb-1.5">
                     Seu Nome Completo *

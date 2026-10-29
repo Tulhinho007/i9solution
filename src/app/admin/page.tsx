@@ -20,6 +20,7 @@ import {
   MessageCircle,
   Clock,
   RefreshCw,
+  LogOut,
 } from "lucide-react";
 import { CMSData, ContactTicket, ProductItem, ServiceItem, TicketStatus } from "@/types";
 import { RESTRICTED_GOOGLE_ADS_TERMS } from "@/lib/constants";
@@ -34,19 +35,100 @@ function checkRestrictedWords(text: string): string[] {
 export default function AdminDashboardPage() {
   const [cms, setCms] = useState<CMSData | null>(null);
   const [tickets, setTickets] = useState<ContactTicket[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [checkingAuth, setCheckingAuth] = useState(true);
+  const [authenticated, setAuthenticated] = useState(false);
+  const [password, setPassword] = useState("");
+  const [loginError, setLoginError] = useState<string | null>(null);
+  const [loggingIn, setLoggingIn] = useState(false);
   const [saving, setSaving] = useState(false);
   const [activeTab, setActiveTab] = useState<AdminTab>("tickets");
-  const [password, setPassword] = useState("i9admin2026");
-  const [unlocked, setUnlocked] = useState(false);
   const [statusMsg, setStatusMsg] = useState<{
     type: "success" | "error";
     text: string;
   } | null>(null);
 
+  async function fetchProtectedData() {
+    const [cmsRes, ticketsRes] = await Promise.all([
+      fetch("/api/cms", { cache: "no-store" }),
+      fetch("/api/tickets", { cache: "no-store" }),
+    ]);
+
+    if (cmsRes.status === 401 || ticketsRes.status === 401) {
+      setAuthenticated(false);
+      return;
+    }
+
+    const [cmsJson, ticketsJson] = await Promise.all([
+      cmsRes.json(),
+      ticketsRes.json(),
+    ]);
+
+    if (cmsJson.success && cmsJson.data) {
+      setCms(cmsJson.data);
+    }
+    if (ticketsJson.success && Array.isArray(ticketsJson.tickets)) {
+      setTickets(ticketsJson.tickets);
+    }
+    setAuthenticated(true);
+  }
+
+  useEffect(() => {
+    fetch("/api/admin/auth", { cache: "no-store" })
+      .then(async (res) => {
+        if (res.ok) {
+          await fetchProtectedData();
+        } else {
+          setAuthenticated(false);
+        }
+      })
+      .catch(() => setAuthenticated(false))
+      .finally(() => setCheckingAuth(false));
+  }, []);
+
+  async function handleLogin(e: React.FormEvent) {
+    e.preventDefault();
+    setLoggingIn(true);
+    setLoginError(null);
+
+    try {
+      const res = await fetch("/api/admin/auth", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password }),
+      });
+
+      const json = await res.json();
+
+      if (!res.ok || !json.success) {
+        setLoginError(json.error || "Credenciais inválidas.");
+        return;
+      }
+
+      // Limpa a senha da memória imediatamente após o login (a sessão fica no Cookie HttpOnly)
+      setPassword("");
+      await fetchProtectedData();
+    } catch {
+      setLoginError("Erro de conexão ao autenticar.");
+    } finally {
+      setLoggingIn(false);
+    }
+  }
+
+  async function handleLogout() {
+    await fetch("/api/admin/auth", { method: "DELETE" });
+    setAuthenticated(false);
+    setCms(null);
+    setTickets([]);
+    setPassword("");
+  }
+
   async function loadTickets() {
     try {
-      const res = await fetch("/api/tickets");
+      const res = await fetch("/api/tickets", { cache: "no-store" });
+      if (res.status === 401) {
+        setAuthenticated(false);
+        return;
+      }
       const json = await res.json();
       if (json.success && Array.isArray(json.tickets)) {
         setTickets(json.tickets);
@@ -56,34 +138,81 @@ export default function AdminDashboardPage() {
     }
   }
 
-  useEffect(() => {
-    Promise.all([
-      fetch("/api/cms").then((res) => res.json()),
-      fetch("/api/tickets").then((res) => res.json()),
-    ])
-      .then(([cmsJson, ticketsJson]) => {
-        if (cmsJson.success && cmsJson.data) {
-          setCms(cmsJson.data);
-        }
-        if (ticketsJson.success && Array.isArray(ticketsJson.tickets)) {
-          setTickets(ticketsJson.tickets);
-        }
-      })
-      .finally(() => setLoading(false));
-  }, []);
-
-  if (loading || !cms) {
+  if (checkingAuth) {
     return (
       <div className="min-h-screen bg-[#0F172A] text-white flex items-center justify-center">
         <div className="text-center space-y-2">
           <div className="w-8 h-8 border-2 border-cyan-400 border-t-transparent rounded-full animate-spin mx-auto" />
-          <p className="text-sm text-slate-300">Carregando Painel Administrativo (CMS)...</p>
+          <p className="text-sm text-slate-300">Verificando sessão segura...</p>
         </div>
       </div>
     );
   }
 
-  // Scanner global em tempo real para avisar se o cliente digitar termos restritos do Google Ads
+  // Tela de Login Blindada (nenhum dado do CMS ou dos Chamados é baixado antes de autenticar)
+  if (!authenticated || !cms) {
+    return (
+      <div className="min-h-screen bg-[#0F172A] text-white flex items-center justify-center p-4">
+        <form
+          onSubmit={handleLogin}
+          autoComplete="off"
+          className="max-w-md w-full bg-slate-900 border border-slate-800 rounded-2xl p-8 shadow-2xl space-y-6"
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-cyan-500 to-emerald-500 p-0.5">
+              <div className="w-full h-full bg-[#0F172A] rounded-[10px] flex items-center justify-center">
+                <ShieldCheck className="w-6 h-6 text-cyan-400" />
+              </div>
+            </div>
+            <div>
+              <h1 className="text-xl font-extrabold">Acesso Restrito &bull; i9 Solution</h1>
+              <p className="text-xs text-slate-400">Autenticação protegida por criptografia HMAC</p>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <label htmlFor="admin-pass" className="block text-xs font-bold uppercase text-slate-300">
+              Chave de Acesso Administrativo
+            </label>
+            <div className="relative">
+              <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5" />
+              <input
+                id="admin-pass"
+                type="password"
+                required
+                autoComplete="current-password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full rounded-xl bg-slate-950 border border-slate-700 pl-10 pr-4 py-3 text-sm text-white focus:outline-none focus:border-cyan-400"
+                placeholder="Digite sua senha de administrador"
+              />
+            </div>
+          </div>
+
+          {loginError && (
+            <div className="p-3.5 rounded-xl bg-red-950/90 border border-red-500/40 text-xs font-semibold text-red-300">
+              {loginError}
+            </div>
+          )}
+
+          <button
+            type="submit"
+            disabled={loggingIn}
+            className="w-full py-3.5 rounded-xl font-bold text-sm bg-gradient-to-r from-emerald-500 to-cyan-500 text-slate-950 hover:brightness-110 disabled:opacity-60 transition-all"
+          >
+            {loggingIn ? "Validando credenciais..." : "Entrar no Painel Seguro"}
+          </button>
+
+          <div className="text-center pt-2">
+            <Link href="/" className="text-xs text-cyan-400 hover:underline">
+              &larr; Voltar para a Página Inicial
+            </Link>
+          </div>
+        </form>
+      </div>
+    );
+  }
+
   const entireTextDump = JSON.stringify({
     hero: cms.hero,
     services: cms.services,
@@ -100,8 +229,12 @@ export default function AdminDashboardPage() {
       const res = await fetch("/api/cms", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ password, data: cms }),
+        body: JSON.stringify({ data: cms }),
       });
+      if (res.status === 401) {
+        setAuthenticated(false);
+        return;
+      }
       const json = await res.json();
       if (!res.ok || !json.success) {
         setStatusMsg({ type: "error", text: json.error || "Erro ao salvar." });
@@ -125,8 +258,12 @@ export default function AdminDashboardPage() {
       const res = await fetch("/api/cms", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ password, resetToDefault: true }),
+        body: JSON.stringify({ resetToDefault: true }),
       });
+      if (res.status === 401) {
+        setAuthenticated(false);
+        return;
+      }
       const json = await res.json();
       if (json.success && json.data) {
         setCms(json.data);
@@ -186,8 +323,12 @@ export default function AdminDashboardPage() {
       const res = await fetch("/api/tickets", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ password, id, status }),
+        body: JSON.stringify({ id, status }),
       });
+      if (res.status === 401) {
+        setAuthenticated(false);
+        return;
+      }
       const json = await res.json();
       if (json.success) {
         setTickets(json.tickets);
@@ -198,13 +339,17 @@ export default function AdminDashboardPage() {
   }
 
   async function handleDeleteTicket(id: string) {
-    if (!confirm("Deseja excluir este chamado do histórico?")) return;
+    if (!confirm("Deseja excluir permanentemente este chamado do servidor?")) return;
     try {
       const res = await fetch("/api/tickets", {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ password, id }),
+        body: JSON.stringify({ id }),
       });
+      if (res.status === 401) {
+        setAuthenticated(false);
+        return;
+      }
       const json = await res.json();
       if (json.success) {
         setTickets(json.tickets);
@@ -215,60 +360,6 @@ export default function AdminDashboardPage() {
   }
 
   const newTicketsCount = tickets.filter((t) => t.status === "Novo").length;
-
-  // Tela de Login Simples do Painel
-  if (!unlocked) {
-    return (
-      <div className="min-h-screen bg-[#0F172A] text-white flex items-center justify-center p-4">
-        <div className="max-w-md w-full bg-slate-900 border border-slate-800 rounded-2xl p-8 shadow-2xl space-y-6">
-          <div className="flex items-center gap-3">
-            <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-cyan-500 to-emerald-500 p-0.5">
-              <div className="w-full h-full bg-[#0F172A] rounded-[10px] flex items-center justify-center">
-                <ShieldCheck className="w-6 h-6 text-cyan-400" />
-              </div>
-            </div>
-            <div>
-              <h1 className="text-xl font-extrabold">Painel CMS &bull; i9 Solution</h1>
-              <p className="text-xs text-slate-400">Gerenciador de Textos, Produtos e Contatos</p>
-            </div>
-          </div>
-
-          <div className="space-y-3">
-            <label className="block text-xs font-bold uppercase text-slate-300">
-              Senha de Acesso
-            </label>
-            <div className="relative">
-              <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5" />
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full rounded-xl bg-slate-950 border border-slate-700 pl-10 pr-4 py-3 text-sm text-white focus:outline-none focus:border-cyan-400"
-                placeholder="Digite a senha do painel"
-              />
-            </div>
-            <p className="text-[11px] text-slate-400">
-              Senha padrão de demonstração já preenchida: <code className="text-cyan-400">i9admin2026</code>
-            </p>
-          </div>
-
-          <button
-            type="button"
-            onClick={() => setUnlocked(true)}
-            className="w-full py-3.5 rounded-xl font-bold text-sm bg-gradient-to-r from-emerald-500 to-cyan-500 text-slate-950 hover:brightness-110 transition-all"
-          >
-            Entrar no Painel Administrativo
-          </button>
-
-          <div className="text-center pt-2">
-            <Link href="/" className="text-xs text-cyan-400 hover:underline">
-              &larr; Voltar para a Landing Page
-            </Link>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-[#0F172A] text-white">
@@ -281,10 +372,10 @@ export default function AdminDashboardPage() {
             </div>
             <div>
               <h1 className="text-lg font-extrabold">
-                Painel Administrativo (CMS) &mdash; i9 Solution
+                Painel Administrativo Blindado &mdash; i9 Solution
               </h1>
               <p className="text-xs text-slate-400">
-                Edite títulos, serviços, vitrine de peças e contatos sem mexer no código
+                Sessão criptografada via Cookie HttpOnly (Nenhum dado salvo no navegador)
               </p>
             </div>
           </div>
@@ -318,6 +409,16 @@ export default function AdminDashboardPage() {
               <Save className="w-4 h-4" />
               {saving ? "Salvando..." : "Publicar Alterações"}
             </button>
+
+            <button
+              type="button"
+              onClick={handleLogout}
+              className="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl text-xs font-bold bg-red-950/60 hover:bg-red-900/70 text-red-300 border border-red-800/60 transition-colors"
+              title="Encerrar sessão com segurança"
+            >
+              <LogOut className="w-3.5 h-3.5" />
+              Sair
+            </button>
           </div>
         </div>
       </header>
@@ -344,7 +445,7 @@ export default function AdminDashboardPage() {
             <div className="flex items-center gap-2.5 text-xs sm:text-sm">
               <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />
               <span>
-                <strong>Escudo Google Ads Ativo:</strong> Todos os textos atuais estão 100% livres de termos restritos.
+                <strong>Escudo Google Ads &amp; Proteção de Dados Ativos:</strong> Textos 100% conformes e dados de contatos protegidos no servidor.
               </span>
             </div>
           </div>
@@ -445,7 +546,7 @@ export default function AdminDashboardPage() {
                   Central de Chamados e Solicitações de Diagnóstico
                 </h2>
                 <p className="text-xs text-slate-400 mt-1">
-                  Todos os formulários preenchidos no site caem diretamente aqui com número de protocolo e botão para responder o cliente no WhatsApp.
+                  Dados confidenciais protegidos no servidor (inacessíveis ao público e nunca gravados em LocalStorage).
                 </p>
               </div>
               <button
@@ -465,7 +566,7 @@ export default function AdminDashboardPage() {
                   Nenhum chamado recebido ainda
                 </h3>
                 <p className="text-xs text-slate-400 max-w-md mx-auto">
-                  Preencha o formulário &ldquo;Solicite um Diagnóstico ou Orçamento&rdquo; na página inicial para testar: o chamado aparecerá aqui imediatamente!
+                  Quando um cliente preencher o formulário na página inicial, o chamado aparecerá exclusivamente aqui para usuários autenticados.
                 </p>
               </div>
             ) : (
@@ -978,7 +1079,7 @@ export default function AdminDashboardPage() {
                       settings: { ...cms.settings, whatsappNumber: e.target.value },
                     })
                   }
-                  placeholder="Ex: 5581999999999"
+                  placeholder="Ex: 5581999447735"
                   className="w-full rounded-xl bg-slate-950 border border-emerald-500/50 px-4 py-3 text-sm text-white font-bold"
                 />
               </div>
@@ -1074,4 +1175,3 @@ export default function AdminDashboardPage() {
     </div>
   );
 }
-

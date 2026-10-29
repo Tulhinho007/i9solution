@@ -79,9 +79,8 @@ export default function Footer({ settings = DEFAULT_SITE_SETTINGS }: FooterProps
                 </Link>
               </li>
               <li>
-                <Link href="/admin" className="inline-flex items-center gap-1.5 text-slate-400 hover:text-cyan-400 transition-colors">
-                  <Settings className="w-3.5 h-3.5" />
-                  Painel Administrativo (CMS)
+                <Link href="/#localizacao" className="hover:text-cyan-400 transition-colors">
+                  Solicitar Diagnóstico
                 </Link>
               </li>
             </ul>

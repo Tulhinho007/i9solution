@@ -164,7 +164,7 @@ export default function ProductsShowcase({
             <div className="space-y-1.5">
               <div className="inline-flex items-center gap-2 text-xs font-semibold text-cyan-400">
                 <Database className="w-4 h-4" />
-                Vitrine Gerenciável pelo Painel (/admin)
+                Estoque Local em Recife
               </div>
               <h3 className="text-xl font-bold text-white">
                 Procurando algum componente para seu Notebook ou PC Gamer?

@@ -49,14 +49,6 @@ export default function Header({ settings = DEFAULT_SITE_SETTINGS }: HeaderProps
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
               Diagnóstico Ágil &bull; Resolução em até 1 Hora*
             </span>
-            <Link
-              href="/admin"
-              className="hidden sm:inline-flex items-center gap-1 text-[11px] text-slate-400 hover:text-cyan-400 transition-colors"
-              title="Acessar Painel Administrativo (CMS)"
-            >
-              <Settings className="w-3 h-3" />
-              Painel Admin
-            </Link>
           </div>
         </div>
       </div>
@@ -129,13 +121,6 @@ export default function Header({ settings = DEFAULT_SITE_SETTINGS }: HeaderProps
               {item.label}
             </Link>
           ))}
-          <Link
-            href="/admin"
-            onClick={() => setMobileMenuOpen(false)}
-            className="block py-2.5 px-3 rounded-lg text-sm font-medium text-slate-400 hover:bg-slate-800/70 hover:text-cyan-400"
-          >
-            Painel Administrativo (/admin)
-          </Link>
           <a
             href={whatsappHref}
             target="_blank"
